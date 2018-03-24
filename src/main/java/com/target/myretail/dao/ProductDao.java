@@ -4,6 +4,5 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 import com.target.myretail.model.Product;
 
-public interface ProductDao extends MongoRepository<Product, String>{
-	public Product findByProductid(String productid);
+public interface ProductDao extends MongoRepository<Product, String> {
 }

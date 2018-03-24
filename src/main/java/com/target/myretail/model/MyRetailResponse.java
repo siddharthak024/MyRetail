@@ -1,10 +1,13 @@
 package com.target.myretail.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class MyRetailResponse {
 	
 	private String id;
 	private String name;
-	private Current_price current_price;
+	@JsonProperty("current_price")
+	private CurrentPrice current_price;
 	public String getId() {
 		return id;
 	}
@@ -17,10 +20,10 @@ public class MyRetailResponse {
 	public void setName(String name) {
 		this.name = name;
 	}
-	public Current_price getCurrent_price() {
+	public CurrentPrice getCurrent_price() {
 		return current_price;
 	}
-	public void setCurrent_price(Current_price current_price) {
+	public void setCurrent_price(CurrentPrice current_price) {
 		this.current_price = current_price;
 	}
 	
