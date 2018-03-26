@@ -26,11 +26,11 @@ import com.target.myretail.model.CurrentPrice;
 import com.target.myretail.model.Product;
 
 @RunWith(PowerMockRunner.class)
-@PrepareForTest(ProductDetailsImpl.class)
+@PrepareForTest(ProductDetailsServiceImpl.class)
 public class ProductDetailsImplTest {
 
 	@InjectMocks
-	private ProductDetailsImpl productDetails;
+	private ProductDetailsServiceImpl productDetails;
 
 	@Mock
 	private RestTemplate restTemplate;
@@ -55,8 +55,6 @@ public class ProductDetailsImplTest {
 	@Test
 	public void getUpdateCriteria() throws Exception {
 		final Product product = new Product();
-
-		// final Product myRetailResponse = new Product();
 		product.setProductId("15117729");
 		product.setName("productNmae");
 		CurrentPrice currentPrice = new CurrentPrice();

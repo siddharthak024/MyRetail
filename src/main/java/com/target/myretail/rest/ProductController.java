@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.target.myretail.model.Product;
-import com.target.myretail.service.api.ProductDetails;
+import com.target.myretail.service.api.ProductDetailsService;
 
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -28,7 +28,7 @@ import io.swagger.annotations.ApiResponses;
 public class ProductController {
 
 	@Autowired
-	private ProductDetails productDetails;
+	private ProductDetailsService productDetails;
 
 	/**
 	 * Get Product Details from DB and external service	 * 

@@ -26,10 +26,10 @@ import com.target.myretail.exception.ProductIdParamAndRequestNotMatchException;
 import com.target.myretail.model.Product;
 import com.target.myretail.model.response.ProductResponse;
 import com.target.myretail.rest.AbstractRequestHeaders;
-import com.target.myretail.service.api.ProductDetails;
+import com.target.myretail.service.api.ProductDetailsService;
 
 @Service
-public class ProductDetailsImpl implements ProductDetails {
+public class ProductDetailsServiceImpl implements ProductDetailsService {
 
 	@Autowired
 	private MongoOperations mongoOperations;

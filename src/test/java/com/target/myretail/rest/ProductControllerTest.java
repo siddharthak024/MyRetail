@@ -14,7 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.target.myretail.model.Product;
-import com.target.myretail.service.api.ProductDetails;
+import com.target.myretail.service.api.ProductDetailsService;
 
 public class ProductControllerTest {
 
@@ -22,7 +22,7 @@ public class ProductControllerTest {
 	private ProductController subject;
 
 	@Mock
-	private ProductDetails productDetails;
+	private ProductDetailsService productDetails;
 
 	@Before
 	public void setup() {
