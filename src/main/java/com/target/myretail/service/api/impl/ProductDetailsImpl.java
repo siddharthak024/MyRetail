@@ -3,6 +3,7 @@ package com.target.myretail.service.api.impl;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +19,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.target.myretail.model.CurrentPrice;
-import com.target.myretail.model.MyRetailResponse;
+import com.target.myretail.exception.CurrencyCodeNullException;
+import com.target.myretail.exception.CurrencyValueNullException;
+import com.target.myretail.exception.NoProductFoundException;
+import com.target.myretail.exception.ProductIdParamAndRequestNotMatchException;
 import com.target.myretail.model.Product;
 import com.target.myretail.model.response.ProductResponse;
 import com.target.myretail.rest.AbstractRequestHeaders;
@@ -46,37 +49,41 @@ public class ProductDetailsImpl implements ProductDetails {
 	Logger log = LogManager.getLogger(getClass());
 
 	@Override
-	public MyRetailResponse getProductDetails(String id) {
+	public Product getProductDetails(String id) {
 		ResponseEntity<ProductResponse> responseEntity = getExternalResponse();
-
 		Product product = getProductFromDB(getQueryCriteria(id));
 		if (product == null) {
-			log.error("product id not found in db");
-			return null;
+			log.error("GET product id not found in db");
+			throw new NoProductFoundException(id);
 		}
-		MyRetailResponse productGetResponse = setResponse(product, getProductResponseName(responseEntity));
+		Product productGetResponse = retriveMyRetailResponse(product, getProductResponseName(responseEntity));
+		log.info("GET call success for product id : " + id);
 		return productGetResponse;
 	}
 
 	@Override
-	public Product putProductDetails(String id, MyRetailResponse myRetailRequest) {
-		if (!id.equalsIgnoreCase(myRetailRequest.getId())) {
+	public void updateProductPriceDetails(String id, Product product) {
+		if (!id.equalsIgnoreCase(product.getProductId())) {
 			log.error("product id not matched with request product id");
-			return null;
+			throw new ProductIdParamAndRequestNotMatchException(id);
 		}
 		Query query = getQueryCriteria(id);
-		Update update = getUpdateCriteria(myRetailRequest);
+		Update update = getUpdateCriteria(product);
 		mongoOperations.updateFirst(query, update, Product.class);
-		return getProductFromDB(query);
+		product = getProductFromDB(query);
+		if (product == null) {
+			log.error("PUT product id not found in db");
+			throw new NoProductFoundException(id);
+		}
+		log.info("PUT call success for product id : " + id);
 	}
 
-	private ResponseEntity<ProductResponse> getExternalResponse() {
+	private ResponseEntity getExternalResponse() {
 		RestTemplate restTemplate = new RestTemplate();
 		URI uri = getUri();
 		HttpHeaders headers = AbstractRequestHeaders.buildHttpHeaders();
-		HttpEntity<?> entity = new HttpEntity<Object>(headers);
-		ResponseEntity<ProductResponse> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity,
-				ProductResponse.class);
+		HttpEntity entity = new HttpEntity(headers);
+		ResponseEntity responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity, ProductResponse.class);
 		return responseEntity;
 	}
 
@@ -94,15 +101,9 @@ public class ProductDetailsImpl implements ProductDetails {
 		return response.getBody().getProduct().getItem().getProduct_description().getTitle();
 	}
 
-	public MyRetailResponse setResponse(Product product, String productName) {
-		MyRetailResponse productGetResponse = new MyRetailResponse();
-		productGetResponse.setId(product.getProductId());
-		productGetResponse.setName(productName);
-		CurrentPrice currentPrice = new CurrentPrice();
-		currentPrice.setCurrencyCode(product.getCurrentPrice().getCurrencyCode());
-		currentPrice.setCurrencyValue(product.getCurrentPrice().getCurrencyValue());
-		productGetResponse.setCurrent_price(currentPrice);
-		return productGetResponse;
+	public Product retriveMyRetailResponse(Product product, String productName) {
+		product.setName(productName);
+		return product;
 	}
 
 	private Product getProductFromDB(Query query) {
@@ -116,10 +117,19 @@ public class ProductDetailsImpl implements ProductDetails {
 		return query;
 	}
 
-	private Update getUpdateCriteria(MyRetailResponse myRetailResponse) {
+	private Update getUpdateCriteria(Product myRetailResponse) {
+		if (StringUtils.isBlank(myRetailResponse.getCurrentPrice().getCurrencyCode())) {
+			log.error("Currency Code should not be Null for : " + myRetailResponse.getProductId());
+			throw new CurrencyCodeNullException(myRetailResponse.getProductId());
+		}
+		if (myRetailResponse.getCurrentPrice().getCurrencyValue() == null
+				|| myRetailResponse.getCurrentPrice().getCurrencyValue().isNaN()) {
+			log.error("Currency Value should not be Null/ALPHA_NUMERIC for : " + myRetailResponse.getProductId());
+			throw new CurrencyValueNullException(myRetailResponse.getProductId());
+		}
 		Update update = new Update();
-		update.set(currentPriceValue, myRetailResponse.getCurrent_price().getCurrencyValue());
-		update.set(currentPriceCode, myRetailResponse.getCurrent_price().getCurrencyCode());
+		update.set(currentPriceValue, myRetailResponse.getCurrentPrice().getCurrencyValue());
+		update.set(currentPriceCode, myRetailResponse.getCurrentPrice().getCurrencyCode());
 		return update;
 	}
 
